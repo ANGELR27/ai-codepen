@@ -1,0 +1,5 @@
+{
+  "name": "AI CodePen",
+  "description": "An intelligent code editor similar to CodePen, featuring real-time previews and AI-powered code generation with Gemini. Create web snippets with HTML, CSS, and JavaScript, and bring your ideas to life instantly.",
+  "requestFramePermissions": []
+}
