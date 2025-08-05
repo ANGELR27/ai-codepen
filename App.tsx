@@ -203,63 +203,121 @@ const Editor = ({ language, displayName, icon, value, onChange, onToggleExpand, 
         theme={theme}
         value={value}
                 onMount={(editor, monaco) => {
-          // Define and set a custom Monokai theme
-          monaco.editor.defineTheme('monokai', {
-            base: 'vs-dark',
-            inherit: true,
-            rules: [
-              { token: 'comment', foreground: '6a9955' },
-              { token: 'keyword', foreground: 'c586c0' },
-              { token: 'string', foreground: 'ce9178' },
-              { token: 'number', foreground: 'b5cea8' },
-              { token: 'tag', foreground: '569cd6' },
-              { token: 'attribute.name', foreground: '9cdcfe' },
-              { token: 'attribute.value', foreground: 'ce9178' },
-            ],
-            colors: {
-              'editor.background': '#1e1e1e',
-            }
-          });
+                    // Define and set a custom Monokai theme
+                    monaco.editor.defineTheme('monokai', {
+                        base: 'vs-dark',
+                        inherit: true,
+                        rules: [
+                            { token: 'comment', foreground: '6a9955' },
+                            { token: 'keyword', foreground: 'c586c0' },
+                            { token: 'string', foreground: 'ce9178' },
+                            { token: 'number', foreground: 'b5cea8' },
+                            { token: 'tag', foreground: '569cd6' },
+                            { token: 'attribute.name', foreground: '9cdcfe' },
+                            { token: 'attribute.value', foreground: 'ce9178' },
+                        ],
+                        colors: {
+                            'editor.background': '#1e1e1e',
+                        }
+                    });
 
-          monaco.editor.defineTheme('dribbble', {
-            base: 'vs-dark',
-            inherit: true,
-            rules: [
-                { token: 'comment', foreground: '7f848e' },
-                { token: 'keyword', foreground: 'f973d0' },
-                { token: 'string', foreground: '98c379' },
-                { token: 'number', foreground: 'd19a66' },
-                { token: 'tag', foreground: '61afef' },
-                { token: 'attribute.name', foreground: '9cdcfe' },
-                { token: 'attribute.value', foreground: '98c379' },
-                { token: 'identifier', foreground: 'd8d4e7' },
-            ],
-            colors: {
-                'editor.background': '#251e3f',
-                'editor.foreground': '#d8d4e7',
-                'editorLineNumber.foreground': '#636b7b',
-                'editorCursor.foreground': '#f8f8f0',
-                'editor.selectionBackground': '#44475a',
-                'editor.lineHighlightBackground': '#2c2f40',
-            }
-          });
+                    monaco.editor.defineTheme('dribbble', {
+                        base: 'vs-dark',
+                        inherit: true,
+                        rules: [
+                            { token: 'comment', foreground: '7f848e' },
+                            { token: 'keyword', foreground: 'f973d0' },
+                            { token: 'string', foreground: '98c379' },
+                            { token: 'number', foreground: 'd19a66' },
+                            { token: 'tag', foreground: '61afef' },
+                            { token: 'attribute.name', foreground: '9cdcfe' },
+                            { token: 'attribute.value', foreground: '98c379' },
+                            { token: 'identifier', foreground: 'd8d4e7' },
+                        ],
+                        colors: {
+                            'editor.background': '#251e3f',
+                            'editor.foreground': '#d8d4e7',
+                            'editorLineNumber.foreground': '#636b7b',
+                            'editorCursor.foreground': '#f8f8f0',
+                            'editor.selectionBackground': '#44475a',
+                            'editor.lineHighlightBackground': '#2c2f40',
+                        }
+                    });
 
-          // Set initial theme
-          monaco.editor.setTheme(theme);
-          editor.getAction('editor.action.formatDocument').run();
+                    if (language === 'html') {
+                        monaco.languages.registerCompletionItemProvider('html', {
+                            triggerCharacters: ['!'],
+                            provideCompletionItems: (model, position) => {
+                                const textUntilPosition = model.getValueInRange({
+                                    startLineNumber: position.lineNumber,
+                                    startColumn: 1,
+                                    endLineNumber: position.lineNumber,
+                                    endColumn: position.column,
+                                });
 
-          // Add format on save action
-          editor.addAction({
-            id: 'format-on-save',
-            label: 'Format Document on Save',
-            keybindings: [
-              monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
-            ],
-            run: (ed) => {
-              ed.getAction('editor.action.formatDocument').run();
-            },
-          });
-        }}
+                                const suggestions = [];
+
+                                // HTML5 Boilerplate snippet
+                                if (textUntilPosition.endsWith('!')) {
+                                    suggestions.push({
+                                        label: '!',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        documentation: 'HTML5 boilerplate',
+                                        insertText: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Document</title>\n</head>\n<body>\n  $0\n</body>\n</html>`,
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: new monaco.Range(position.lineNumber, position.column - 1, position.lineNumber, position.column),
+                                    });
+                                }
+
+                                const word = model.getWordUntilPosition(position);
+                                const range = new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn);
+
+                                // HTML tags snippets
+                                const tags = ['div', 'p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'ul', 'li', 'table', 'tr', 'td', 'th', 'form', 'button', 'label', 'textarea', 'select', 'option'];
+                                const selfClosingTags = ['img', 'input', 'br', 'hr', 'meta', 'link'];
+
+                                const createSnippet = (tag, selfClosing = false) => ({
+                                    label: tag,
+                                    kind: monaco.languages.CompletionItemKind.Snippet,
+                                    documentation: `Create <${tag}> element`,
+                                    insertText: selfClosing ? `<${tag} $0>` : `<${tag}>\n\t$0\n</${tag}>`,
+                                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                    range: range,
+                                });
+
+                                tags.forEach(tag => {
+                                    if (tag.startsWith(word.word)) {
+                                        suggestions.push(createSnippet(tag));
+                                    }
+                                });
+
+                                selfClosingTags.forEach(tag => {
+                                    if (tag.startsWith(word.word)) {
+                                        suggestions.push(createSnippet(tag, true));
+                                    }
+                                });
+
+                                return { suggestions: suggestions.filter((s, i, a) => a.findIndex(t => t.label === s.label) === i) };
+                            },
+                        });
+                    }
+
+                    // Set initial theme
+                    monaco.editor.setTheme(theme);
+                    editor.getAction('editor.action.formatDocument').run();
+
+                    // Add format on save action
+                    editor.addAction({
+                        id: 'format-on-save',
+                        label: 'Format Document on Save',
+                        keybindings: [
+                            monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+                        ],
+                        run: (ed) => {
+                            ed.getAction('editor.action.formatDocument').run();
+                        },
+                    });
+                }}
         onChange={(val) => onChange(val || '')}
         options={{
             minimap: { enabled: false },
@@ -366,9 +424,9 @@ const ThemeMenu = ({ onSelectTheme, currentTheme }: { onSelectTheme: (theme: str
 };
 
 export default function App() {
-  const [htmlCode, setHtmlCode] = useState(initialHtml);
-  const [cssCode, setCssCode] = useState(initialCss);
-  const [jsCode, setJsCode] = useState(initialJs);
+  const [htmlCode, setHtmlCode] = useState(() => localStorage.getItem('ai-codepen-html') || initialHtml);
+  const [cssCode, setCssCode] = useState(() => localStorage.getItem('ai-codepen-css') || initialCss);
+  const [jsCode, setJsCode] = useState(() => localStorage.getItem('ai-codepen-js') || initialJs);
   const [error, setError] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [paneHeight, setPaneHeight] = useState(window.innerHeight * 0.55);
@@ -383,7 +441,11 @@ export default function App() {
 
   const debouncedHtml = useDebounce(htmlCode, 500);
   const debouncedCss = useDebounce(cssCode, 500);
-    const debouncedJs = useDebounce(jsCode, 500);
+  const debouncedJs = useDebounce(jsCode, 500);
+
+  useEffect(() => { localStorage.setItem('ai-codepen-html', debouncedHtml); }, [debouncedHtml]);
+  useEffect(() => { localStorage.setItem('ai-codepen-css', debouncedCss); }, [debouncedCss]);
+  useEffect(() => { localStorage.setItem('ai-codepen-js', debouncedJs); }, [debouncedJs]);
 
   useEffect(() => {
     const initMonaco = async () => {

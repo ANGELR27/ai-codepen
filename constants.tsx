@@ -85,3 +85,6 @@ export const ThemeIcon = ({ className }: { className?: string }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.402-2.368-1.068-3.244l-2.432-2.432a4.5 4.5 0 00-6.364-6.364L4.5 7.5" />
     </svg>
 );
+
+export const HTML_TAGS = ['div', 'p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'ul', 'li', 'table', 'tr', 'td', 'th', 'form', 'input', 'button', 'label', 'textarea', 'select', 'option'];
+export const SELF_CLOSING_HTML_TAGS = ['img', 'br', 'hr', 'meta', 'link'];
