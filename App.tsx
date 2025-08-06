@@ -8,6 +8,12 @@ import type { GeneratedCode, LogEntry, LogType } from './types';
 import { templates, Template } from './templates';
 import { HtmlIcon, CssIcon, JsIcon, SparklesIcon, ConsoleIcon, ClearIcon, PreviewIcon, ExpandIcon, CollapseIcon, SaveIcon, LoadIcon, ExportIcon, TemplateIcon, ThemeIcon } from './constants';
 
+const FullScreenIcon = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+  </svg>
+);
+
 
 
 const initialHtml = `<!-- Welcome to AI CodePen! -->
@@ -196,7 +202,7 @@ const Editor = ({ language, displayName, icon, value, onChange, onToggleExpand, 
         {isExpanded ? <CollapseIcon className="w-5 h-5" /> : <ExpandIcon className="w-5 h-5" />}
       </button>
     </div>
-    <div className="flex-1">
+    <div className="flex-1 overflow-hidden">
       <MonacoEditor
         height="100%"
         language={language}
@@ -581,6 +587,12 @@ export default function App() {
     }
   }, []);
 
+  const handleOpenInNewTab = () => {
+    const blob = new Blob([srcDoc], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  };
+
   const TabButton = ({ isActive, onClick, children }) => (
           <button onClick={onClick} className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-all ${isActive ? 'text-amber-400 border-amber-400' : 'text-zinc-400 border-transparent hover:text-white hover:bg-zinc-700/50'}`}>
          {children}
@@ -621,7 +633,14 @@ export default function App() {
                     <TabButton isActive={activeTab === 'preview'} onClick={() => setActiveTab('preview')}><PreviewIcon className="w-5 h-5"/> Vista Previa</TabButton>
                     <TabButton isActive={activeTab === 'console'} onClick={() => setActiveTab('console')}><ConsoleIcon className="w-5 h-5"/> Consola <span className="text-xs bg-slate-700 rounded-full px-1.5 py-0.5">{logs.length}</span></TabButton>
                 </div>
-                 {activeTab === 'console' && <button onClick={() => setLogs([])} className="mr-2 text-slate-400 hover:text-white transition-colors"><ClearIcon className="w-5 h-5"/></button>}
+                 <div className="flex items-center gap-2 mr-2">
+                    {activeTab === 'preview' && (
+                        <button onClick={handleOpenInNewTab} title="Open in New Tab" className="text-slate-400 hover:text-white transition-colors">
+                            <FullScreenIcon className="w-5 h-5" />
+                        </button>
+                    )}
+                    {activeTab === 'console' && <button onClick={() => setLogs([])} title="Clear console" className="text-slate-400 hover:text-white transition-colors"><ClearIcon className="w-5 h-5"/></button>}
+                 </div>
             </div>
             <div className="flex-1 bg-white relative">
               {activeTab === 'preview' ? (
